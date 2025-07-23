@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/msys64/mingw64/include/**",  // Путь к Boost и другим библиотекам MSYS2
+                "C:/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/15.1.0/include/**"  // Путь к стандартным заголовкам GCC
+            ],
+            "defines": [],
+            "compilerPath": "C:/msys64/mingw64/bin/g++.exe",  // Важно: g++.exe, а не gcc.exe!
+            "cStandard": "c17",
+            "cppStandard": "c++20",  // Явно указываем C++20
+            "intelliSenseMode": "windows-gcc-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "C:/msys64/mingw64/include/**",
+                    "C:/msys64/mingw64/lib/**"
+                ]
+            }
+        }
+    ],
+    "version": 4
+}
