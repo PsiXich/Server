@@ -11,20 +11,36 @@
 
 #include <iostream>
 #include <thread>
+#include "setting.hpp"
+
+using tcp = boost::asio::ip::tcp;
 
 namespace {
 
-    boost::asio::awaitable<void> listen() { 
+    boost::asio::awaitable<void> workClient(tcp::socket socket) {
+
+    }
+
+    boost::asio::awaitable<void> listen() {
+        //object performer
         const auto executor = co_await boost::asio::this_coro::executor;
+
+        tcp::acceptor acceptor{executor, {tcp::v4(), port}};
+
+        for(;;) {
+            //get socket
+            tcp::socket socket = co_await acceptor.async_accept(boost::asio::use_awaitable);
+            boost::asio::co_spawn(executor, workClient(std::move(socket)), boost::asio::detached);
+        }
 
     }
 
     void runServer() {
         std::cout << std::this_thread::get_id() << "Running server..." << std::endl;
-
+        //ProActor
         boost::asio::io_context ioContext;
 
-        //auto x = boost::asio::co_spawn(ioContext, listen, boost::asio::detached);
+        boost::asio::co_spawn(ioContext, listen, boost::asio::detached);
 
         ioContext.run();
 
