@@ -1,3 +1,4 @@
+#include "setting.hpp"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/co_spawn.hpp>
@@ -9,16 +10,23 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio.hpp>
 
+
 #include <iostream>
 #include <thread>
-#include "setting.hpp"
 
 using tcp = boost::asio::ip::tcp;
 
 namespace {
 
     boost::asio::awaitable<void> workClient(tcp::socket socket) {
+        boost::asio::streambuf buffer;
 
+        co_await boost::asio::async_read_until(socket, buffer, "\n", boost::asio::use_awaitable);
+
+        auto bufs = buffer.data();
+        std::string name(boost::asio::buffers_begin(bufs),
+                        boost::asio::buffers_begin(bufs) + buffer.size());
+        boost::trim(name);
     }
 
     boost::asio::awaitable<void> listen() {
