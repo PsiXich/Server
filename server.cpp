@@ -1,4 +1,5 @@
 #include "setting.hpp"
+#include "client.hpp"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/co_spawn.hpp>
@@ -27,6 +28,19 @@ namespace {
         std::string name(boost::asio::buffers_begin(bufs),
                         boost::asio::buffers_begin(bufs) + buffer.size());
         boost::trim(name);
+
+        Client client("co", name);
+
+        buffer.consume(buffer.size());
+
+        co_await boost::asio::async_read_until(socket, buffer, "\n", boost::asio::use_awaitable);
+
+        const auto& const_buf = buffer.data();
+        std::string_view logRecord(
+            static_cast<const char*>(const_buf.data()),
+            const_buf.size());
+
+        client.putRecord(logRecord);
     }
 
     boost::asio::awaitable<void> listen() {

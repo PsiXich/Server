@@ -2,6 +2,9 @@
 
 #include <fstream>
 #include <string_view>
+#include <filesystem>
+#include <memory>
+#include <mutex>
 
 class Client {
     class Sequence {
@@ -19,7 +22,7 @@ class Client {
         const Client::Sequence&);
 
 public:
-    Client(std::string_view prefix, std::string_view name);
+    Client(std::string_view prefix, std::string_view name, bool create_dir = true);
     ~Client();
     //запрет копирования
     Client(const Client&) = delete;
@@ -31,6 +34,10 @@ public:
     void putRecord(std::string_view record);
 
 private:
+    std::ofstream openFile(std::string_view prefix, std::string_view name, bool create_dir);
+    std::string generateFilename(std::string_view prefix, std::string_view name) const;
+
     Sequence m_sequence;
     std::ofstream m_file;
+    std::mutex m_mutex;
 };
