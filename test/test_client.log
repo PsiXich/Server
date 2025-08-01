@@ -1,0 +1,4 @@
+[0001] ---=== Client "test_client" ===---
+[0002] log record 1
+[0003] log record 2
+[0004] ^^^ ^^^ ^^^ Client stopped ^^^ ^^^ ^^^
