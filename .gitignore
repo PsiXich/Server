@@ -1,2 +1,3 @@
 /build
-/CMakeLists.txttest/
+CMakeLists.txt
+test/

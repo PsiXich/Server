@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <memory>
 #include <mutex>
+#include <iomanip>
 
 class Client {
     class Sequence {
@@ -23,8 +24,8 @@ class Client {
 
 public:
     Client(std::string_view prefix, std::string_view name, bool create_dir = true);
-    ~Client();
-    //запрет копирования
+    ~Client() noexcept;
+
     Client(const Client&) = delete;
     Client(Client&&) = default;
 
