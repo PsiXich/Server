@@ -1,3 +1,0 @@
-E:/Server/build/CMakeFiles/server.dir
-E:/Server/build/CMakeFiles/edit_cache.dir
-E:/Server/build/CMakeFiles/rebuild_cache.dir
