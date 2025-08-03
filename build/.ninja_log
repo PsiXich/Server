@@ -1,7 +1,4 @@
 # ninja log v7
-11	1790	7757495992982368	CMakeFiles/server.dir/client.cpp.obj	7b71412fa0343563
-6	7506	7757495992927065	CMakeFiles/server.dir/server.cpp.obj	d2dc8bcd0b333d88
-7512	7794	7757496067991208	server.exe	12265b2284d5abfc
-65	5420	7757559674051256	CMakeFiles/server.dir/client.cpp.obj	7b71412fa0343563
-61	16705	7757559674000689	CMakeFiles/server.dir/server.cpp.obj	d2dc8bcd0b333d88
-16705	17262	7757559840441857	server.exe	12265b2284d5abfc
+16	1822	7758829872954420	CMakeFiles/server.dir/client.cpp.obj	9635459f3a9076cf
+10	9467	7758829872899249	CMakeFiles/server.dir/server.cpp.obj	adf043fa4b8d41a7
+9474	9802	7758829967527478	server.exe	1168400cb7571761

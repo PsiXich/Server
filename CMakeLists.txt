@@ -8,13 +8,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
-find_package(Boost 1.70 REQUIRED COMPONENTS system)
+find_package(Boost 1.70 REQUIRED COMPONENTS system program_options)
 
 if(Boost_FOUND)
     message(STATUS "Boost found: ${Boost_VERSION}")
     include_directories(${Boost_INCLUDE_DIRS})
 else()
-    message(FATAL_ERROR)
+    message(FATAL_ERROR "Boost not found")
 endif()
 
 add_executable(server
@@ -23,6 +23,7 @@ add_executable(server
 )
 target_link_libraries(server PRIVATE
     Boost::system
+    Boost::program_options
     ws2_32
     mswsock
 )
