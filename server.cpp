@@ -1,4 +1,3 @@
-#include "setting.hpp"
 #include "client.hpp"
 
 #define BOOST_ASIO_DISABLE_IOCP
@@ -11,11 +10,13 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio.hpp>
+#include <boost/program_options.hpp>
 
 
 #include <iostream>
 #include <thread>
 
+namespace po = boost::program_options;
 using tcp = boost::asio::ip::tcp;
 
 namespace {
@@ -61,7 +62,7 @@ namespace {
         }
     }
 
-    boost::asio::awaitable<void> listen() {
+    boost::asio::awaitable<void> listen(int port) {
         // Object performer
         const auto executor = co_await boost::asio::this_coro::executor;
 
@@ -75,7 +76,7 @@ namespace {
 
     }
 
-    void runServer() {
+    void runServer(int port, const std::string& log_dir) {
         std::cout << std::this_thread::get_id() << "Running server..." << std::endl;
         // ProActor
         boost::asio::io_context ioContext;
@@ -85,7 +86,7 @@ namespace {
             ioContext.stop();
         });
 
-        boost::asio::co_spawn(ioContext, listen, boost::asio::detached);
+        boost::asio::co_spawn(ioContext, listen(port), boost::asio::detached);
 
         ioContext.run();
 
@@ -96,7 +97,26 @@ namespace {
 
 auto main() -> int {
     try {
-        runServer();
+        po::options_description desc("Allowed options");
+        desc.add_options()
+            ("help", "produce help messege")
+            ("port", po::value<int>()->default_value(4000), "port listen on")
+            ("log_dir", po::value<std::string>()->default_value("test"), "directory for log files")
+        ;
+
+        po::variables_map vm;
+        po::store(po::parse_config_file<char>("config.cfg", desc), vm);
+        po::notify(vm);
+
+        if (vm.count("help")) {
+            std::cout << desc << "\n";
+            return EXIT_SUCCESS;
+        }
+
+        int port = vm["port"].as<int>();
+        std::string log_dir = vm["log_dir"].as<std::string>();
+
+        runServer(port, log_dir);
         return EXIT_SUCCESS;
     } catch (const std::exception& ex) {
         std::cerr << "Exception: " << ex.what() << "\"." << std::endl;
