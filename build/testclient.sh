@@ -1,6 +1,6 @@
 #!/bin/bash
 
-build/server &
+../build/server &
 SERVER_PID=$!
 echo "Server started with PID: $SERVER_PID"
 
@@ -11,7 +11,7 @@ echo "Data sent to server"
 
 sleep 1
 
-LOG_DIR="test"
+LOG_DIR="../test"
 echo "Checking directory: $LOG_DIR"
 ls -l $LOG_DIR
 
@@ -41,5 +41,7 @@ else
 fi
 
 rm expected.txt
-kill $SERVER_PID
+
+echo -e "stop\npass" | build/server
 echo "Server stopped"
+kill $SERVER_PID 2>/dev/null
