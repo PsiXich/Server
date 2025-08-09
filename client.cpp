@@ -51,7 +51,7 @@ std::ofstream Client::openFile(std::string_view prefix, std::string_view name, b
         }
     }
     
-    std::ofstream file(filename, std::ios::app);
+    std::ofstream file(filename, std::ios::out | std::ios::trunc);
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open log file: " + filename);
     }
