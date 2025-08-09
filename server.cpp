@@ -1,4 +1,3 @@
-#include "setting.hpp"
 #include "client.hpp"
 
 #define BOOST_ASIO_DISABLE_IOCP
@@ -11,11 +10,14 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio.hpp>
+#include <boost/program_options.hpp>
 
 
 #include <iostream>
 #include <thread>
+#include <atomic>
 
+namespace po = boost::program_options;
 using tcp = boost::asio::ip::tcp;
 
 namespace {
@@ -61,42 +63,98 @@ namespace {
         }
     }
 
-    boost::asio::awaitable<void> listen() {
-        // Object performer
-        const auto executor = co_await boost::asio::this_coro::executor;
-
-        tcp::acceptor acceptor{executor, {tcp::v4(), port}};
-
-        for(;;) {
-            // Get socket
-            tcp::socket socket = co_await acceptor.async_accept(boost::asio::use_awaitable);
-            boost::asio::co_spawn(executor, workClient(std::move(socket)), boost::asio::detached);
+    boost::asio::awaitable<void> listen(auto port) {
+        try {
+            const auto executor = co_await boost::asio::this_coro::executor;
+            tcp::acceptor acceptor{executor, {tcp::v4(), port}};
+            std::cout << "Listening on port " << port << std::endl;
+            for (;;) {
+                tcp::socket socket(executor);
+                boost::system::error_code ec;
+                co_await acceptor.async_accept(socket, boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+                if (ec) {
+                    std::cerr << "Accept error: " << ec.message() << std::endl;
+                    continue; // Continue listening for new connections
+                }
+                std::cout << "Accepted connection" << std::endl;
+                boost::asio::co_spawn(executor, workClient(std::move(socket)), boost::asio::detached);
+            }
+        } catch (const std::exception& ex) {
+            std::cerr << "Exception in listen: " << ex.what() << std::endl;
         }
-
     }
 
-    void runServer() {
-        std::cout << std::this_thread::get_id() << "Running server..." << std::endl;
-        // ProActor
+    //flag for stopped server
+    std::atomic<bool> stop_server(false);
+
+    void consoleInputThread(boost::asio::io_context& ioContext, const std::string&password) {
+        std::string input;
+        while(!stop_server) {
+            std::getline(std::cin, input);
+            if (input == "stop") {
+                std::cout << "Enter password: ";
+                std::string pass;
+                std::getline(std::cin, pass);
+                if (pass == password) {
+                    stop_server = true;
+                    ioContext.stop();
+                    std::cout << "Stopping server..." << std::endl;
+                } else {
+                    std::cout << "Incorrect password" << std::endl;
+                }
+            } else {
+                std::cout << "Unknown command. Use 'stop' to shutdown the server." << std::endl;
+            }
+        }
+    }
+
+    void runServer(int port, const std::string& log_dir, const std::string& password) {
+        std::cout << "Running server on port " << "..." << std::endl;
+        
         boost::asio::io_context ioContext;
-        // For shutdown
         boost::asio::signal_set signals(ioContext, SIGINT, SIGTERM);
         signals.async_wait([&](const boost::system::error_code&, int) {
             ioContext.stop();
         });
 
-        boost::asio::co_spawn(ioContext, listen, boost::asio::detached);
+        boost::asio::co_spawn(ioContext, listen(static_cast<unsigned short>(port)), boost::asio::detached);
+
+        std::thread consoleThread(consoleInputThread, std::ref(ioContext), password);
 
         ioContext.run();
+        stop_server = true; 
+        consoleThread.join(); 
 
-        std::cout << std::this_thread::get_id() << "Server stopped" << std::endl;
+        std::cout << "Server stopped" << std::endl;
     }
 
 } // namespace
 
-auto main() -> int {
+auto main(int argc, char* argv[]) -> int {
     try {
-        runServer();
+        po::options_description desc("Allowed options");
+        desc.add_options()
+            ("help", "produce help messege")
+            ("port", po::value<int>()->default_value(4000), "port listen on")
+            ("log_dir", po::value<std::string>()->default_value("test"), "directory for log files")
+            ("password", po::value<std::string>()->default_value("default_pass"), "password to stop the server")
+        ;
+
+        po::variables_map vm;
+        po::store(po::parse_config_file<char>("config.cfg", desc), vm);
+        po::notify(vm);
+
+        if (vm.count("help")) {
+            std::cout << desc << "\n";
+            return EXIT_SUCCESS;
+        }
+
+        int port = vm["port"].as<int>();
+        std::string log_dir = vm["log_dir"].as<std::string>();
+        std::string password = vm["password"].as<std::string>();
+
+        runServer(port, log_dir, password);
+
         return EXIT_SUCCESS;
     } catch (const std::exception& ex) {
         std::cerr << "Exception: " << ex.what() << "\"." << std::endl;
