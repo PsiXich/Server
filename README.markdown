@@ -1,15 +1,15 @@
 # Logging Server
 
-This is a TCP-based logging server implemented in C++ using Boost.Asio. The server listens on a configurable port (default 4000), accepts connections from clients, and writes log records to files organized by client names in the "test" directory. Each client sends its name followed by log records, which are stored with sequence numbers for traceability. The server can be stopped securely via console input with a password.
+This is a TCP-based logging server implemented in C++ using Boost.Asio. The server listens on a configurable port (default 4000), accepts connections from clients, and writes log records to files organized by client names in the "test" directory. Each client sends its name followed by log records, which are stored with sequence numbers for traceability. The server can be stopped via a password-protected console command.
 
 ## Features
 
 - **Asynchronous I/O**: Utilizes Boost.Asio for efficient handling of multiple client connections concurrently using coroutines.
 - **Thread-Safe Logging**: Ensures safe file operations with mutexes for each client's log file.
-- **Client Name Validation**: Prevents directory traversal attacks by validating client names (rejects empty names or those containing ".." or "/").
+- **Client Name Validation**: Performs basic client-name validation (rejects empty names or those containing ".." or "/").
 - **Structured Log Files**: Logs are written to files in the `test` directory with sequence numbers for each entry (e.g., `[0001] ---=== Client "name" ===---`).
 - **Configuration File**: Uses `config.cfg` to set port, log directory (though currently hardcoded to "test"), and password for stopping the server.
-- **Secure Shutdown**: Server can be stopped by typing "stop" in the console and entering the configured password.
+- **Console Shutdown**: Server can be stopped by typing "stop" in the console and entering the configured password.
 - **Test Script**: Includes a Python script (`test.py`) to verify server functionality using socket connections.
 
 ## Requirements
@@ -20,12 +20,16 @@ This is a TCP-based logging server implemented in C++ using Boost.Asio. The serv
 - Python 3 (for running the `test.py` script; optional for testing)
 - Netcat or similar tool (for manual testing on Unix-like systems)
 
+## Build scope
+
+The current CMake configuration targets Windows with GCC/MinGW and links Windows socket libraries. Building on other platforms requires adapting the compiler and linker settings. Use a Boost version with C++20 coroutine support; the minimum version declared by CMake alone does not guarantee that support.
+
 ## Building the Project
 
 1. Clone the repository (if applicable):
    ```bash
-   git clone https://github.com/yourusername/yourrepository.git
-   cd yourrepository
+   git clone https://github.com/PsiXich/Server.git
+   cd Server
    ```
 
 2. Create a build directory:
@@ -57,20 +61,20 @@ password = pass
 
 - `port`: The TCP port to listen on (default: 4000).
 - `log_dir`: Intended log directory (default: test), but currently hardcoded to "test" in the code.
-- `password`: Password required to stop the server via console (default: pass).
+- `password`: Password required to stop the server via console (default in code: `default_pass`; the example above uses `pass`).
 
 ## Running the Server
 
-Start the server by running:
+Run from the repository root so that `config.cfg` is available:
 ```bash
-./server
+./build/server.exe
 ```
 
-The server listens on the configured port for incoming TCP connections. To stop the server:
+For multi-configuration generators, use `./build/Release/server.exe`. The server listens on the configured port for incoming TCP connections. To stop the server:
 1. Type `stop` in the console.
 2. Enter the configured password when prompted.
 
-The server will gracefully shut down.
+The console command stops the I/O context and exits the server.
 
 ## Client Interaction
 
